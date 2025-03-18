@@ -1,0 +1,15 @@
+{
+  "local": {
+    "monitored_path": "./secure_files",
+    "decrypted_path": "./secure_files"
+  },
+  "onedrive": {
+    "path": "",
+    "encrypted_folder": "encrypted_files"
+  },
+  "pgp": {
+    "key_name": "your_key_name",
+    "passphrase": "",
+    "gnupghome": "~/.gnupg"
+  }
+} 
