@@ -20,7 +20,7 @@ Paragon is a transparent encryption layer for OneDrive files. It works with your
 
 1. Clone the repository:
    ```
-   git clone https://github.com/mk2112/paragon.git
+   git clone https://github.com/MK2112/paragon.git
    cd paragon
    ```
 
@@ -64,47 +64,47 @@ Paragon is a transparent encryption layer for OneDrive files. It works with your
 
 ## Usage
 
-### Starting the Application
+### Quick Start
 
-Run the application:
-
-```
-onedrive-pgp
-```
-
-Or with a custom config file, different from the default `config.json`:
-
-```
-onedrive-pgp --config /path/to/your/differing/config.json
-```
-
-### Basic Usage
-
-1. Place files you want to encrypt in the monitored directory (default: `./secure_files`).
-2. The application will automatically:
-   - Encrypt the files using your PGP key
-   - Copy the encrypted versions to your OneDrive folder
-   - OneDrive's own client will sync these encrypted files to the cloud, as usual
-   - On other devices, Paragon will detect newly encrypted or updated encrypted files, download and decrypt them for use
-
-### Example Workflow
-
-1. Create a password file:
-   ```
+1. **Add files to encrypt:**  
+   Place any files you want to keep secure into your chosen "monitored" directory (e.g. `secure_files/`).  
+   *Example:*  
+   ```bash
    echo "my-secret-password" > secure_files/passwords.txt
    ```
 
-2. Paragon will:
-   - Automatically detect the new file
-   - Encrypt it with your PGP key
-   - Copy the encrypted file to your OneDrive folder at `encrypted_files/passwords.txt.gpg`
-   - OneDrive client syncs the encrypted file to the cloud
+2. **Start Paragon:**  
+   Run the application to automatically encrypt new or changed files in your monitored directory:
+   ```bash
+   onedrive-pgp
+   ```
+   You can specify a custom config file if needed:
+   ```bash
+   onedrive-pgp --config /path/to/your/config.json
+   ```
 
-3. On another device running Paragon:
-   - OneDrive client downloads the encrypted file
-   - Paragon detects the new encrypted file
-   - Paragon decrypts it to `secure_files/passwords.txt`
-   - You can now access your password securely on multiple devices
+3. **Encrypted files appear:**  
+   Paragon will automatically:
+   - Detect new or updated files in your monitored directory.
+   - Encrypt them using your PGP key.
+   - Place the encrypted versions (e.g. `passwords.txt.gpg`) in the configured encrypted folder (e.g. `encrypted_files/`).
+
+4. **Accessing your files elsewhere:**  
+   - To decrypt a file, Paragon will automatically detect new encrypted files in your encrypted folder and decrypt them back to your monitored directory.
+   - You can safely sync the encrypted folder (`encrypted_files/`) with any cloud service (e.g. OneDrive, Dropbox, etc.), knowing only encrypted data leaves your device.
+
+### Example Workflow
+
+- Add a file to `secure_files/`  
+  - Paragon encrypts it to `encrypted_files/filename.gpg`.
+
+- Copy `encrypted_files/filename.gpg` to another device and place it in that device’s encrypted folder  
+  - Paragon decrypts it back to `secure_files/filename`.
+
+---
+
+**Tip:**  
+Your files are always encrypted before leaving your device. Only you, with your PGP key, can decrypt them.
 
 ## Security Considerations
 
