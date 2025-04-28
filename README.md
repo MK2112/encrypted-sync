@@ -93,6 +93,13 @@ Paragon is a transparent encryption layer for OneDrive files. It works with your
    - To decrypt a file, Paragon will automatically detect new encrypted files in your encrypted folder and decrypt them back to your monitored directory.
    - You can safely sync the encrypted folder (`encrypted_files/`) with any cloud service (e.g. OneDrive, Dropbox, etc.), knowing only encrypted data leaves your device.
 
+### Tests
+
+Run the tests with:
+```bash
+pytest -v ./tests/
+```
+
 ### Example Workflow
 
 - Add a file to `secure_files/`  
