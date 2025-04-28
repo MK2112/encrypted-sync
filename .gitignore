@@ -1,2 +1,5 @@
 
 tests/__init__.py
+src/__init__.py
+src/__pycache__/*
+tests/__pycache__/*
