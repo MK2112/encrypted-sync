@@ -23,7 +23,7 @@ def test_upload_and_list_files(tmp_path):
     client = SyncFolderClient(config)
     test_file = tmp_path / "foo.txt"
     test_file.write_text("bar")
-    result = client.upload_file(str(test_file))
+    _ = client.upload_file(str(test_file))
     files = client.list_files()
     assert any(f["name"] == "foo.txt" for f in files)
 
@@ -37,9 +37,37 @@ def test_download_file(tmp_path):
     client.download_file("foo.txt", str(out))
     assert out.read_text() == "bar"
 
+
+def test_download_nonexistent_file(tmp_path):
+    config = {"sync_folder": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"}}
+    client = SyncFolderClient(config)
+    with pytest.raises(FileNotFoundError):
+        client.download_file("doesnotexist.txt", str(tmp_path / "out.txt"))
+
+
+def test_upload_overwrites(tmp_path):
+    config = {"sync_folder": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"}}
+    client = SyncFolderClient(config)
+    test_file = tmp_path / "foo.txt"
+    test_file.write_text("bar")
+    client.upload_file(str(test_file))
+    # Overwrite
+    test_file.write_text("baz")
+    client.upload_file(str(test_file))
+    files = client.list_files()
+    assert any(f["name"] == "foo.txt" for f in files)
+
+
+def test_ensure_folder_exists_nested(tmp_path):
+    config = {"sync_folder": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"}}
+    client = SyncFolderClient(config)
+    folder = "nested/folder/structure"
+    _ = client.ensure_folder_exists(folder)
+    assert os.path.exists(os.path.join(tmp_path, folder))
+
 def test_ensure_folder_exists(tmp_path):
     config = {"sync_folder": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"}}
     client = SyncFolderClient(config)
     folder = "custom_folder"
-    result = client.ensure_folder_exists(folder)
+    _ = client.ensure_folder_exists(folder)
     assert os.path.exists(os.path.join(tmp_path, folder))

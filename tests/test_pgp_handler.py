@@ -52,3 +52,32 @@ def test_missing_key_raises(dummy_config):
             m.return_value.stdout = "gpg (GnuPG) 2.2.0\n"
             with pytest.raises(ValueError, match="PGP key 'dummy-key' not found"):
                 PGPHandler(dummy_config)
+
+
+@mock.patch("src.pgp_handler.gnupg.GPG")
+def test_encrypt_invalid_file(MockGPG, dummy_config, tmp_path):
+    MockGPG.return_value.list_keys.return_value = [{"uids": ["dummy-key"]}]
+    handler = PGPHandler(dummy_config)
+    with pytest.raises(FileNotFoundError):
+        handler.encrypt_file(str(tmp_path / "doesnotexist.txt"))
+
+
+@mock.patch("src.pgp_handler.gnupg.GPG")
+def test_decrypt_invalid_file(MockGPG, dummy_config, tmp_path):
+    MockGPG.return_value.list_keys.return_value = [{"uids": ["dummy-key"]}]
+    handler = PGPHandler(dummy_config)
+    with pytest.raises(FileNotFoundError):
+        handler.decrypt_file(str(tmp_path / "doesnotexist.txt.gpg"))
+
+
+@mock.patch("src.pgp_handler.gnupg.GPG")
+def test_missing_passphrase_prompts(MockGPG, dummy_config, tmp_path, monkeypatch):
+    MockGPG.return_value.list_keys.return_value = [{"uids": ["dummy-key"]}]
+    from src.pgp_handler import PGPHandler
+    handler = PGPHandler(dummy_config)
+    test_file = tmp_path / "test.txt"
+    test_file.write_text("secret")
+    monkeypatch.setattr("getpass.getpass", lambda prompt: "dummy-pass")
+    handler.passphrase = None
+    # Should not raise, will use dummy-pass
+    handler.encrypt_file(str(test_file))
