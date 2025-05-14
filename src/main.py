@@ -22,7 +22,7 @@ def setup_logging():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(),
-            logging.FileHandler('paragon.log')
+            logging.FileHandler('encrypted-sync.log')
         ]
     )
 
@@ -43,7 +43,7 @@ def check_android_permissions():
 
 def main():
     """Main application entry point."""
-    parser = argparse.ArgumentParser(description='Paragon: PGP Encryption Middleman for any cloud sync folder')
+    parser = argparse.ArgumentParser(description='encrypted-sync: PGP Encryption Middleware for any cloud sync folder')
     parser.add_argument('--config', default='config.json', help='Path to configuration file')
     args = parser.parse_args()
     
@@ -84,7 +84,7 @@ def main():
         sync_manager.start()
         file_monitor.start()
         
-        logging.info("Paragon: PGP Encryption Middleman started")
+        logging.info("encrypted-sync: PGP Encryption Middleware started")
         
         # Keep the main thread alive
         while True:

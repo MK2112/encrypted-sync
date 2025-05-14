@@ -2,8 +2,6 @@ import pytest
 from unittest import mock
 import sys
 import os
-import builtins
-import json
 
 # Add src/ to sys.path so we can import main.py directly
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
@@ -28,7 +26,7 @@ def test_main_entry(
     }
     MockLoadConfig.return_value = config
     sys_argv = sys.argv
-    sys.argv = ["sync_folder-pgp", "--config", "dummy.json"]
+    sys.argv = ["encrypted-sync", "--config", "dummy.json"]
     with mock.patch("signal.pause", side_effect=SystemExit):
         import main
         try:

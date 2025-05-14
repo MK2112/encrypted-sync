@@ -118,7 +118,7 @@ class SyncManager:
                 if remote_file and remote_file.get('lastModifiedDateTime', 0) > file_path.stat().st_mtime:
                     conflict_path = f"{file_path}.conflict"
                     shutil.copy2(file_path, conflict_path)
-                    logging.warning(f"Conflict detected for {rel_path}. Local copy saved as {conflict_path}")
+                    logging.warning(f"encrypted-sync conflict detected for {rel_path}. Local copy saved as {conflict_path}")
                 
                 # Encrypt the file
                 temp_encrypted = self.pgp_handler.encrypt_file(file_path)
