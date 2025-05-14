@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../s
 @mock.patch("main.check_android_permissions")
 @mock.patch("main.load_config")
 @mock.patch("main.PGPHandler")
-@mock.patch("main.OneDriveClient")
+@mock.patch("main.SyncFolderClient")
 @mock.patch("main.SyncManager")
 @mock.patch("main.FileMonitor")
 def test_main_entry(
@@ -22,13 +22,13 @@ def test_main_entry(
     # Prepare dummy config
     config = {
         "local": {"monitored_path": str(tmp_path), "decrypted_path": str(tmp_path)},
-        "onedrive": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"},
+        "sync_folder": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"},
         "pgp": {"key_name": "dummy", "passphrase": "", "gnupghome": str(tmp_path)},
         "sync": {"check_interval": 1}
     }
     MockLoadConfig.return_value = config
     sys_argv = sys.argv
-    sys.argv = ["onedrive-pgp", "--config", "dummy.json"]
+    sys.argv = ["sync_folder-pgp", "--config", "dummy.json"]
     with mock.patch("signal.pause", side_effect=SystemExit):
         import main
         try:

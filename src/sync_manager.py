@@ -1,16 +1,15 @@
 import os
 import time
+import shutil
 import logging
 import threading
-import shutil
 from pathlib import Path
-from datetime import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-class OneDriveChangeHandler(FileSystemEventHandler):
+class SyncFolderChangeHandler(FileSystemEventHandler):
     def __init__(self, callback):
-        """Initialize OneDrive change handler with callback function."""
+        """Initialize sync folder change handler with callback function."""
         self.callback = callback
         self.last_modified = {}
         
@@ -46,24 +45,24 @@ class OneDriveChangeHandler(FileSystemEventHandler):
         self.callback(path)
 
 class SyncManager:
-    def __init__(self, config, onedrive_client, pgp_handler):
+    def __init__(self, config, sync_folder_client, pgp_handler):
         """
         Initialize sync manager.
         
         Args:
             config: Application configuration
-            onedrive_client: OneDrive client instance
+            sync_folder_client: Sync folder client instance
             pgp_handler: PGP handler instance
         """
         self.config = config
-        self.onedrive_client = onedrive_client
+        self.sync_folder_client = sync_folder_client
         self.pgp_handler = pgp_handler
         
         self.local_path = Path(config['local']['monitored_path']).resolve()
         self.decrypted_path = Path(config['local']['decrypted_path']).resolve()
-        self.encrypted_path = config['onedrive']['encrypted_folder']
-        self.onedrive_encrypted_path = os.path.join(
-            self.onedrive_client.onedrive_path, 
+        self.encrypted_path = config['sync_folder']['encrypted_folder']
+        self.sync_folder_encrypted_path = os.path.join(
+            self.sync_folder_client.sync_folder_path, 
             self.encrypted_path
         )
         
@@ -71,8 +70,8 @@ class SyncManager:
         os.makedirs(self.local_path, exist_ok=True)
         os.makedirs(self.decrypted_path, exist_ok=True)
         
-        # Ensure OneDrive encrypted folder exists
-        self.onedrive_client.ensure_folder_exists(self.encrypted_path)
+        # Ensure sync folder encrypted folder exists
+        self.sync_folder_client.ensure_folder_exists(self.encrypted_path)
         
         # File metadata cache
         self.local_files = {}  # path -> last_modified_time
@@ -81,8 +80,8 @@ class SyncManager:
         # Sync lock to prevent concurrent sync operations
         self.sync_lock = threading.Lock()
         
-        # Set up OneDrive folder observer
-        self.onedrive_observer = None
+        # Set up sync folder folder observer
+        self.sync_folder_observer = None
         
     def handle_local_change(self, file_path):
         """
@@ -106,12 +105,11 @@ class SyncManager:
                 
                 logging.info(f"Local file changed: {rel_path}")
                 
-                # Check if there's a newer version in OneDrive
-                remote_path = f"{self.encrypted_path}/{rel_path}.gpg"
+                # Check if there's a newer version in sync folder
                 remote_file = None
                 
                 # Find the file in the remote files list
-                for file in self.onedrive_client.list_files(self.onedrive_encrypted_path):
+                for file in self.sync_folder_client.list_files(self.sync_folder_encrypted_path):
                     if file.get('name') == f"{rel_path}.gpg":
                         remote_file = file
                         break
@@ -125,9 +123,9 @@ class SyncManager:
                 # Encrypt the file
                 temp_encrypted = self.pgp_handler.encrypt_file(file_path)
                 
-                # Upload to OneDrive
-                onedrive_path = os.path.join(self.onedrive_encrypted_path, f"{rel_path}.gpg")
-                self.onedrive_client.upload_file(temp_encrypted, onedrive_path)
+                # Upload to sync folder
+                sync_folder_path = os.path.join(self.sync_folder_encrypted_path, f"{rel_path}.gpg")
+                self.sync_folder_client.upload_file(temp_encrypted, sync_folder_path)
                 
                 # Update local file cache
                 self.local_files[str(rel_path)] = file_path.stat().st_mtime
@@ -139,9 +137,9 @@ class SyncManager:
             except Exception as e:
                 logging.error(f"Error handling local change for {file_path}: {str(e)}")
     
-    def handle_onedrive_change(self, file_path):
+    def handle_sync_folder_change(self, file_path):
         """
-        Handle a change to a file in the OneDrive encrypted folder.
+        Handle a change to a file in the sync folder encrypted folder.
         
         Args:
             file_path: Path to the changed file
@@ -152,7 +150,7 @@ class SyncManager:
                 if not file_path.name.endswith('.gpg'):
                     return
                     
-                logging.info(f"OneDrive file changed: {file_path.name}")
+                logging.info(f"Sync folder file changed: {file_path.name}")
                 
                 # Get the decrypted file name (remove .gpg extension)
                 decrypted_name = file_path.name[:-4]
@@ -170,25 +168,25 @@ class SyncManager:
                 # Clean up temporary encrypted file
                 os.unlink(temp_encrypted)
                 
-                logging.info(f"Decrypted OneDrive file to {decrypted_path}")
+                logging.info(f"Decrypted sync folder file to {decrypted_path}")
                 
             except Exception as e:
-                logging.error(f"Error handling OneDrive change for {file_path}: {str(e)}")
+                logging.error(f"Error handling sync folder change for {file_path}: {str(e)}")
     
     def start(self):
         """Start the sync manager."""
-        # Set up OneDrive folder observer
-        event_handler = OneDriveChangeHandler(self.handle_onedrive_change)
-        self.onedrive_observer = Observer()
-        self.onedrive_observer.schedule(event_handler, self.onedrive_encrypted_path, recursive=True)
-        self.onedrive_observer.start()
+        # Set up sync folder folder observer
+        event_handler = SyncFolderChangeHandler(self.handle_sync_folder_change)
+        self.sync_folder_observer = Observer()
+        self.sync_folder_observer.schedule(event_handler, self.sync_folder_encrypted_path, recursive=True)
+        self.sync_folder_observer.start()
         
-        logging.info(f"Started monitoring OneDrive folder: {self.onedrive_encrypted_path}")
+        logging.info(f"Started monitoring sync folder: {self.sync_folder_encrypted_path}")
         logging.info("Sync manager started")
     
     def stop(self):
         """Stop the sync manager."""
-        if self.onedrive_observer:
-            self.onedrive_observer.stop()
-            self.onedrive_observer.join()
+        if self.sync_folder_observer:
+            self.sync_folder_observer.stop()
+            self.sync_folder_observer.join()
         logging.info("Sync manager stopped") 

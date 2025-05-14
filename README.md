@@ -1,12 +1,12 @@
 # Paragon
 
-Paragon is a transparent encryption layer for OneDrive files. It works with your existing OneDrive client installation and requires no special configuration on OneDrive's side. Paragon automatically encrypts files with PGP before they sync to OneDrive and decrypts them when updated there. All encryption and decryption happens locally on your device, ensuring your sensitive data remains private.
+Paragon is a transparent encryption layer for sync folder files. It works with your existing sync folder client installation and requires no special configuration on sync folder's side. Paragon automatically encrypts files with PGP before they sync to sync folder and decrypts them when updated there. All encryption and decryption happens locally on your device, ensuring your sensitive data remains private.
 
 ## Features
 
-- Automatic PGP encryption of files before they sync to OneDrive
-- Automatic decryption of files when they're updated on OneDrive
-- Works with your existing OneDrive client installation
+- Automatic PGP encryption of files before they sync to sync folder
+- Automatic decryption of files when they're updated on sync folder
+- Works with your existing sync folder client installation
 - Real-time file monitoring for local changes
 - Event-based checking for remote changes
 
@@ -14,7 +14,7 @@ Paragon is a transparent encryption layer for OneDrive files. It works with your
 
 - Python 3.10 or higher
 - GnuPG installed on your system
-- OneDrive client installed and configured on your computer
+- sync folder client installed and configured on your computer
 
 ## Installation
 
@@ -42,7 +42,7 @@ Paragon is a transparent encryption layer for OneDrive files. It works with your
        "monitored_path": "./secure_files",
        "decrypted_path": "./secure_files"
      },
-     "onedrive": {
+     "sync_folder": {
        "path": "",
        "encrypted_folder": "encrypted_files"
      },
@@ -58,7 +58,7 @@ Paragon is a transparent encryption layer for OneDrive files. It works with your
    ```
    
    Notes:
-   - Use `onedrive.path` to specify the full path
+   - Use `sync_folder.path` to specify the full path to your cloud sync folder (e.g. Dropbox, Google Drive, OneDrive, Syncthing, etc.)
    - Set `pgp.key_name` to the name you used when creating your PGP key
    - Leave `pgp.passphrase` empty to be prompted each time, or set it for automatic operation (less secure)
 
@@ -76,11 +76,11 @@ Paragon is a transparent encryption layer for OneDrive files. It works with your
 2. **Start Paragon:**  
    Run the application to automatically encrypt new or changed files in your monitored directory:
    ```bash
-   onedrive-pgp
+   sync_folder-pgp
    ```
    You can specify a custom config file if needed:
    ```bash
-   onedrive-pgp --config /path/to/your/config.json
+   sync_folder-pgp --config /path/to/your/config.json
    ```
 
 3. **Encrypted files appear:**  
@@ -91,13 +91,13 @@ Paragon is a transparent encryption layer for OneDrive files. It works with your
 
 4. **Accessing your files elsewhere:**  
    - To decrypt a file, Paragon will automatically detect new encrypted files in your encrypted folder and decrypt them back to your monitored directory.
-   - You can safely sync the encrypted folder (`encrypted_files/`) with any cloud service (e.g. OneDrive, Dropbox, etc.), knowing only encrypted data leaves your device.
+   - You can safely sync the encrypted folder (`encrypted_files/`) with any cloud service (e.g. Dropbox, Google Drive, OneDrive, etc.), knowing only encrypted data leaves your device.
 
 ### Tests
 
 Run the tests with:
 ```bash
-pytest -v ./tests/
+pytest ./tests/
 ```
 
 ### Example Workflow
@@ -124,10 +124,10 @@ Your files are always encrypted before leaving your device. Only you, with your 
 
 ## Troubleshooting
 
-- Check the log file (`onedrive_pgp.log`) for detailed information
+- Check the log file (`sync_folder_pgp.log`) for detailed information
 - Ensure your PGP key is properly set up and accessible
-- Verify your OneDrive folder path is correct
-- Make sure the OneDrive client is running and properly syncing
+- Verify your sync folder folder path is correct
+- Make sure the sync folder client is running and properly syncing
 - Make sure you have proper permissions for the directories in your config
 
 ## License

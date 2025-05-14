@@ -3,28 +3,28 @@ import shutil
 import logging
 from pathlib import Path
 
-class OneDriveClient:
+class SyncFolderClient:
     def __init__(self, config):
         """Initialize OneDrive client with configuration."""
         self.config = config
         
         # Get OneDrive folder path from config or try to detect it
-        self.onedrive_path = config.get('onedrive', {}).get('path')
-        if not self.onedrive_path:
-            self.onedrive_path = self._detect_onedrive_path()
+        self.sync_folder_path = config.get('sync_folder', {}).get('path')
+        if not self.sync_folder_path:
+            self.sync_folder_path = self._detect_sync_folder_path()
             
-        if not self.onedrive_path or not os.path.exists(self.onedrive_path):
-            raise ValueError("OneDrive folder not found. Please specify the full path in config.json using the 'onedrive.path' setting.")
+        if not self.sync_folder_path or not os.path.exists(self.sync_folder_path):
+            raise ValueError("OneDrive folder not found. Please specify the full path in config.json using the 'sync_folder.path' setting.")
             
         self.encrypted_path = os.path.join(
-            self.onedrive_path, 
-            config.get('onedrive', {}).get('encrypted_folder', 'encrypted_files')
+            self.sync_folder_path, 
+            config.get('sync_folder', {}).get('encrypted_folder', 'encrypted_files')
         )
         
         # Create encrypted folder if it doesn't exist
         os.makedirs(self.encrypted_path, exist_ok=True)
         
-    def _detect_onedrive_path(self):
+    def _detect_sync_folder_path(self):
         """Try to detect the OneDrive folder path."""
         # Common OneDrive locations
         possible_paths = [
@@ -103,6 +103,6 @@ class OneDriveClient:
         if folder_path.startswith('/'):
             folder_path = folder_path.lstrip('/')
         
-        full_path = os.path.join(self.onedrive_path, folder_path)
+        full_path = os.path.join(self.sync_folder_path, folder_path)
         os.makedirs(full_path, exist_ok=True)
         return {'id': folder_path, 'name': os.path.basename(folder_path)} 

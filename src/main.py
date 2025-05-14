@@ -7,7 +7,7 @@ import signal
 from pathlib import Path
 
 from pgp_handler import PGPHandler
-from onedrive_client import OneDriveClient
+from sync_folder_client import SyncFolderClient
 from file_monitor import FileMonitor
 from sync_manager import SyncManager
 
@@ -23,7 +23,7 @@ def setup_logging():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(),
-            logging.FileHandler('onedrive_pgp.log')
+            logging.FileHandler('paragon.log')
         ]
     )
 
@@ -44,7 +44,7 @@ def check_android_permissions():
 
 def main():
     """Main application entry point."""
-    parser = argparse.ArgumentParser(description='OneDrive PGP Encryption Middleman')
+    parser = argparse.ArgumentParser(description='Paragon: PGP Encryption Middleman for any cloud sync folder')
     parser.add_argument('--config', default='config.json', help='Path to configuration file')
     args = parser.parse_args()
     
@@ -60,10 +60,10 @@ def main():
         
         # Initialize components
         pgp_handler = PGPHandler(config)
-        onedrive_client = OneDriveClient(config)
+        sync_folder_client = SyncFolderClient(config)
         
         # Initialize sync manager
-        sync_manager = SyncManager(config, onedrive_client, pgp_handler)
+        sync_manager = SyncManager(config, sync_folder_client, pgp_handler)
         
         # Initialize file monitor
         file_monitor = FileMonitor(
@@ -85,7 +85,7 @@ def main():
         sync_manager.start()
         file_monitor.start()
         
-        logging.info("OneDrive PGP Encryption Middleman started")
+        logging.info("Paragon: PGP Encryption Middleman started")
         
         # Keep the main thread alive
         while True:

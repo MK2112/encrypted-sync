@@ -16,7 +16,7 @@ def dummy_config(temp_dir):
             "monitored_path": temp_dir,
             "decrypted_path": temp_dir
         },
-        "onedrive": {
+        "sync_folder": {
             "path": temp_dir,
             "encrypted_folder": "encrypted_files"
         },

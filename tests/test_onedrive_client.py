@@ -1,26 +1,26 @@
 import pytest
 import os
 import shutil
-from src.onedrive_client import OneDriveClient
+from src.sync_folder_client import SyncFolderClient
 
 @pytest.fixture
 def odir(tmp_path):
-    d = tmp_path / "onedrive"
+    d = tmp_path / "sync_folder"
     d.mkdir()
     (d / "encrypted_files").mkdir()
     return str(d)
 
-def test_detect_onedrive_path(monkeypatch, tmp_path):
+def test_detect_sync_folder_path(monkeypatch, tmp_path):
     # Simulate OneDrive folder detection
     folder = tmp_path / "OneDrive"
     folder.mkdir()
-    config = {"onedrive": {"path": str(folder), "encrypted_folder": "encrypted_files"}}
-    client = OneDriveClient(config)
-    assert os.path.exists(client.onedrive_path)
+    config = {"sync_folder": {"path": str(folder), "encrypted_folder": "encrypted_files"}}
+    client = SyncFolderClient(config)
+    assert os.path.exists(client.sync_folder_path)
 
 def test_upload_and_list_files(tmp_path):
-    config = {"onedrive": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"}}
-    client = OneDriveClient(config)
+    config = {"sync_folder": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"}}
+    client = SyncFolderClient(config)
     test_file = tmp_path / "foo.txt"
     test_file.write_text("bar")
     result = client.upload_file(str(test_file))
@@ -28,8 +28,8 @@ def test_upload_and_list_files(tmp_path):
     assert any(f["name"] == "foo.txt" for f in files)
 
 def test_download_file(tmp_path):
-    config = {"onedrive": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"}}
-    client = OneDriveClient(config)
+    config = {"sync_folder": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"}}
+    client = SyncFolderClient(config)
     src = tmp_path / "foo.txt"
     src.write_text("bar")
     client.upload_file(str(src))
@@ -38,8 +38,8 @@ def test_download_file(tmp_path):
     assert out.read_text() == "bar"
 
 def test_ensure_folder_exists(tmp_path):
-    config = {"onedrive": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"}}
-    client = OneDriveClient(config)
+    config = {"sync_folder": {"path": str(tmp_path), "encrypted_folder": "encrypted_files"}}
+    client = SyncFolderClient(config)
     folder = "custom_folder"
     result = client.ensure_folder_exists(folder)
     assert os.path.exists(os.path.join(tmp_path, folder))
