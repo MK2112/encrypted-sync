@@ -3,7 +3,7 @@
     "monitored_path": "./secure_files",
     "decrypted_path": "./secure_files"
   },
-  "onedrive": {
+  "sync_folder": {
     "path": "",
     "encrypted_folder": "encrypted_files"
   },

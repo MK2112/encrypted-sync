@@ -57,10 +57,13 @@ Paragon is a transparent encryption layer for sync folder files. It works with y
    }
    ```
    
-   Notes:
-   - Use `sync_folder.path` to specify the full path to your cloud sync folder (e.g. Dropbox, Google Drive, OneDrive, Syncthing, etc.)
+   **Notes:**
+   - Use `sync_folder.path` to specify the full path to your cloud sync folder (e.g. Dropbox, Google Drive, Syncthing, etc.)
    - Set `pgp.key_name` to the name you used when creating your PGP key
    - Leave `pgp.passphrase` empty to be prompted each time, or set it for automatic operation (less secure)
+   - All files in the monitored directory, including hidden files (those starting with a dot), are encrypted and synced.
+   - The tool automatically handles file overwrites and creates conflict files if both local and remote versions change independently.
+   - Attempts to download or decrypt non-existent files will result in clear error messages.
 
 ## Usage
 
@@ -91,7 +94,7 @@ Paragon is a transparent encryption layer for sync folder files. It works with y
 
 4. **Accessing your files elsewhere:**  
    - To decrypt a file, Paragon will automatically detect new encrypted files in your encrypted folder and decrypt them back to your monitored directory.
-   - You can safely sync the encrypted folder (`encrypted_files/`) with any cloud service (e.g. Dropbox, Google Drive, OneDrive, etc.), knowing only encrypted data leaves your device.
+   - You can safely sync the encrypted folder (`encrypted_files/`) with any cloud service (e.g. Dropbox, Google Drive, OneDrive, Syncthing, etc.), knowing only encrypted data leaves your device.
 
 ### Tests
 
@@ -107,8 +110,6 @@ pytest ./tests/
 
 - Copy `encrypted_files/filename.gpg` to another device and place it in that device’s encrypted folder  
   - Paragon decrypts it back to `secure_files/filename`.
-
----
 
 **Tip:**  
 Your files are always encrypted before leaving your device. Only you, with your PGP key, can decrypt them.

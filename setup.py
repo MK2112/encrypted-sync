@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="onedrive-pgp",
+    name="paragon",
     version="0.0.1",
     packages=find_packages(),
     install_requires=[
@@ -13,12 +13,12 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "onedrive-pgp=src.main:main",
+            "paragon=src.main:main",
         ],
     },
     author="MK2112",
     author_email="mk2112@protonmail.com",
-    description="A middleman system for PGP encryption of OneDrive files",
-    keywords="onedrive, pgp, encryption, security",
+    description="A middleman system for PGP encryption of sync folder files",
+    keywords="sync, pgp, encryption, security, paragon",
     python_requires=">=3.6",
 ) 
