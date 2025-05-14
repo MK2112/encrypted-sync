@@ -4,7 +4,6 @@ import json
 import logging
 import argparse
 import signal
-from pathlib import Path
 
 from pgp_handler import PGPHandler
 from sync_folder_client import SyncFolderClient

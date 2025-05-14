@@ -11,7 +11,7 @@ def odir(tmp_path):
     return str(d)
 
 def test_detect_sync_folder_path(monkeypatch, tmp_path):
-    # Simulate OneDrive folder detection
+    # Simulate folder detection
     folder = tmp_path / "OneDrive"
     folder.mkdir()
     config = {"sync_folder": {"path": str(folder), "encrypted_folder": "encrypted_files"}}

@@ -1,7 +1,6 @@
 import os
 import gnupg
 import logging
-from pathlib import Path
 
 class PGPHandler:
     def __init__(self, config):
