@@ -1,5 +1,11 @@
 # encrypted-sync
 
+![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)
+![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
+![GPG](https://img.shields.io/badge/GPG-Encryption-brightgreen.svg)
+![Cloud Sync](https://img.shields.io/badge/Cloud%20Sync-Supported-blueviolet.svg)
+![Build](https://github.com/MK2112/encrypted-sync/actions/workflows/test.yml/badge.svg)
+
 encrypted-sync is an encryption layer for cloud sync services. Files are automatically encrypted with PGP before they sync, and decrypted locally when needed. All encryption and decryption happens on your device, ensuring your data remains private and secure. encrypted-sync makes zero-trust cloud storage effortless for individuals and teams.
 
 ## Features
