@@ -1,10 +1,8 @@
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 import pytest
 from unittest import mock
-import sys
-import os
-
-# Add src/ to sys.path so we can import main.py directly
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 # Patch sys.argv for CLI tests
 @mock.patch("main.setup_logging")

@@ -1,8 +1,10 @@
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 import pytest
 from unittest import mock
 from src.file_monitor import FileMonitor
 import time
-import os
 
 def test_file_monitor_triggers_callback(tmp_path):
     called = []
