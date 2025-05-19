@@ -125,3 +125,56 @@ def test_decrypt_fails_then_cleans_up(MockGPG, dummy_config, tmp_path, monkeypat
         handler.decrypt_file(str(test_file), output_file)
 
     assert not os.path.exists(output_file), "Partial decrypted file was not cleaned up"
+
+@mock.patch("src.pgp_handler.gnupg.GPG")
+def test_decrypt_overwrites_existing_output(MockGPG, dummy_config, tmp_path, monkeypatch):
+    # Simulate GPG with required methods
+    class SuccessGPG:
+        def list_keys(self, priv): return [{"uids": ["dummy-key"]}]
+        def decrypt_file(self, f, passphrase, output):
+            with open(output, "wb") as out_f:
+                out_f.write(b"decrypted content")
+            class Status:
+                ok = True
+                status = "ok"
+                stderr = None
+            return Status()
+
+    MockGPG.return_value = SuccessGPG()
+
+    enc_file = tmp_path / "conflict.txt.gpg"
+    enc_file.write_bytes(b"ciphertext")
+
+    output_file = tmp_path / "conflict.txt"
+    output_file.write_text("old content")
+
+    monkeypatch.setattr("getpass.getpass", lambda prompt: "pass")
+
+    handler = PGPHandler(dummy_config)
+    handler.passphrase = None
+    result_path = handler.decrypt_file(str(enc_file))
+
+    with open(result_path, 'rb') as f:
+        data = f.read()
+
+    assert data == b"decrypted content", "File should be overwritten"
+
+@mock.patch("src.pgp_handler.gnupg.GPG")
+def test_encrypt_empty_file(MockGPG, dummy_config, tmp_path):
+    MockGPG.return_value.list_keys.return_value = [{"uids": ["dummy-key"]}]
+    MockGPG.return_value.encrypt_file.return_value.ok = True
+    MockGPG.return_value.encrypt_file.return_value.status = "ok"
+    MockGPG.return_value.encrypt_file.return_value.stderr = None
+
+    handler = PGPHandler(dummy_config)
+
+    empty_file = tmp_path / "empty.txt"
+    empty_file.touch()
+
+    encrypted = handler.encrypt_file(str(empty_file))
+    assert encrypted.endswith(".gpg")
+
+def test_gpg_binary_missing(dummy_config):
+    with mock.patch("subprocess.run", side_effect=FileNotFoundError):
+        with pytest.raises(EnvironmentError, match="GnuPG binary not found"):
+            PGPHandler(dummy_config)
