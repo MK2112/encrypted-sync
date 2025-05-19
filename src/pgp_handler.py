@@ -58,7 +58,6 @@ class PGPHandler:
             logging.info(f"Encrypted {file_path} to {output_path}")
             return output_path
         else:
-            # Clean up if GPG wrote a partial file
             self._remove(output_path)
             raise RuntimeError(f"Encryption failed: {status.status} — {status.stderr}")
 
@@ -103,14 +102,11 @@ class PGPHandler:
         raise RuntimeError(f"Decryption failed after {self.MAX_PASSPHRASE_RETRIES} attempts. Last error: {last_error}")
 
     def _remove(self, path):
-        # Safely remove file or directory if it exists
         try:
             if os.path.isfile(path):
                 os.remove(path)
-                logging.debug(f"Removed file: {path}")
             elif os.path.isdir(path):
                 shutil.rmtree(path)
-                logging.debug(f"Removed directory: {path}")
         except Exception as e:
             logging.warning(f"Failed to clean up {path}: {str(e)}")
 
@@ -122,7 +118,9 @@ class PGPHandler:
         return sha256.hexdigest()
 
     def _validate_decryption(self, original_path, decrypted_path):
-        # Compare checksums to ensure correctness
         orig_checksum = self._calculate_checksum(original_path)
         dec_checksum = self._calculate_checksum(decrypted_path)
-        return orig_checksum == dec_checksum
+        if orig_checksum != dec_checksum:
+            logging.warning(f"Checksum mismatch: original={orig_checksum}, decrypted={dec_checksum}")
+            return False
+        return True
