@@ -1,4 +1,5 @@
 python-gnupg>=0.5.0
 watchdog>=2.1.9
+gnupg
 #pytest
 #pytest-mock
