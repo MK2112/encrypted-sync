@@ -55,11 +55,13 @@ encrypted-sync is an encryption layer for cloud sync services. Files are automat
      "pgp": {
        "key_name": "your_key_name",
        "passphrase": "",
-       "gnupghome": "~/.gnupg"
+       "gnupghome": "~/.gnupg",
+       "always_trust": false
      },
      "sync": {
        "check_interval": 60
-     }
+     },
+     "log_file": null
    }
    ```
    
@@ -67,6 +69,10 @@ encrypted-sync is an encryption layer for cloud sync services. Files are automat
    - Use `sync_folder.path` to specify the full path to your cloud sync folder (e.g. for Dropbox, Google Drive, Syncthing, etc.)
    - Set `pgp.key_name` to the name you used when creating your PGP key
    - Leave `pgp.passphrase` empty to be prompted each time, or set it for automatic operation (less secure)
+   - Set `pgp.always_trust` to `true` only if you understand the risks; by default it is `false` for better security
+   - Persisted logging is optional:
+     - Set `log_file` to a path (e.g. `"encrypted-sync.log"`) to enable file logging
+     - Set `log_file` to `null` to disable file logging entirely (only console logs)
    - All files in the monitored directory, including hidden files, are encrypted and synced.
    - The tool automatically handles file overwrites and creates conflict files if both local and remote versions change independently.
 
@@ -131,7 +137,7 @@ Your files are always encrypted before leaving your device. Only you, with your 
 
 ## Troubleshooting
 
-- Check the log file (`sync_folder_pgp.log`) for detailed information
+- If enabled, check your log file for detailed information and auditability
 - Ensure your PGP key is properly set up and accessible
 - Verify your sync folder folder path is correct
 - Make sure the sync folder client is running and properly syncing
