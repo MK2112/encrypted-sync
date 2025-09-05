@@ -3,6 +3,7 @@ import time
 import shutil
 import logging
 import threading
+
 from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -83,13 +84,31 @@ class SyncManager:
         # Set up sync folder folder observer
         self.sync_folder_observer = None
         
+    def _is_within(self, base: Path, target: Path) -> bool:
+        # Check if target is within base directory
+        try:
+            base_resolved = base.resolve()
+            target_resolved = target.resolve()
+            return str(target_resolved).startswith(str(base_resolved) + os.sep) or target_resolved == base_resolved
+        except FileNotFoundError:
+            # If target doesn't exist, check with absolute normalization
+            base_abs = base.absolute()
+            target_abs = target.absolute()
+            return str(target_abs).startswith(str(base_abs) + os.sep) or target_abs == base_abs
+
+    def _has_symlink_component(self, path: Path) -> bool:
+        # Check each component for being symlink, avoid traversal
+        current = path
+        while True:
+            if current.exists() and current.is_symlink():
+                return True
+            if current == current.parent:
+                break
+            current = current.parent
+        return False
+
     def handle_local_change(self, file_path):
-        """
-        Handle a local file change.
-        
-        Args:
-            file_path: Path to the changed file
-        """
+        # Handle a local file change using the path to the changed file
         with self.sync_lock:
             try:
                 # Skip temporary files and hidden files
@@ -99,26 +118,57 @@ class SyncManager:
                 # Skip already encrypted files
                 if file_path.name.endswith('.gpg'):
                     return
-                    
+
+                # Ensure changed path within monitored directory, not a symlink
+                if not self._is_within(self.local_path, file_path) or self._has_symlink_component(file_path):
+                    logging.warning(f"Skipping file outside monitored directory or containing symlinks: {file_path}")
+                    return
+
                 # Get relative path from monitored directory
                 rel_path = file_path.relative_to(self.local_path)
                 
                 logging.info(f"Local file changed: {rel_path}")
                 
                 # Check if there's a newer version in sync folder
-                remote_file = None
+                remote_file_mtime = None
+                reported_remote_mtime = None
+
+                # Compute expected full remote path for file (handles nested paths)
+                # Check directly for speeeeed
+                expected_remote_full_path = os.path.normpath(
+                    os.path.join(self.sync_folder_encrypted_path, f"{rel_path}.gpg")
+                )
+                if os.path.exists(expected_remote_full_path):
+                    try:
+                        remote_file_mtime = os.path.getmtime(expected_remote_full_path)
+                    except OSError:
+                        remote_file_mtime = None
+                else:
+                    # Consult client list_files metadata as fallback
+                    try:
+                        expected_name = os.path.basename(f"{rel_path}.gpg")
+                        for f in self.sync_folder_client.list_files(self.sync_folder_encrypted_path):
+                            fid = os.path.normpath(f.get('id', '') or '')
+                            fname = f.get('name')
+                            if fid == expected_remote_full_path or fname == expected_name:
+                                reported_remote_mtime = f.get('lastModifiedDateTime')
+                                break
+                    except Exception:
+                        # Client lookup failed; ignore, proceed
+                        pass
                 
-                # Find the file in the remote files list
-                for file in self.sync_folder_client.list_files(self.sync_folder_encrypted_path):
-                    if file.get('name') == f"{rel_path}.gpg":
-                        remote_file = file
-                        break
-                
-                # If remote file exists and is newer, create a conflict file
-                if remote_file and remote_file.get('lastModifiedDateTime', 0) > file_path.stat().st_mtime:
+                # If remote file exists and is newer -> Create a conflict file
+                local_mtime = file_path.stat().st_mtime
+                conflict_detected = (
+                    (remote_file_mtime is not None and remote_file_mtime > local_mtime) or
+                    (reported_remote_mtime is not None and reported_remote_mtime > local_mtime)
+                )
+                if conflict_detected:
                     conflict_path = f"{file_path}.conflict"
                     shutil.copy2(file_path, conflict_path)
                     logging.warning(f"encrypted-sync conflict detected for {rel_path}. Local copy saved as {conflict_path}")
+                    # Return early: avoid encrypting/uploading on detected conflict
+                    return
                 
                 # Encrypt the file
                 temp_encrypted = self.pgp_handler.encrypt_file(file_path)
@@ -138,22 +188,22 @@ class SyncManager:
                 logging.error(f"Error handling local change for {file_path}: {str(e)}")
     
     def handle_sync_folder_change(self, file_path):
-        """
-        Handle a change to a file in the sync folder encrypted folder.
-        
-        Args:
-            file_path: Path to the changed file
-        """
+        # Handle a change to a file (via its path) in the sync folder encrypted folder.
         with self.sync_lock:
             try:
                 # Skip non-encrypted files
                 if not file_path.name.endswith('.gpg'):
                     return
-                    
+
+                # Ensure changed path within encrypted sync folder and not a symlink
+                if not self._is_within(Path(self.sync_folder_encrypted_path), file_path) or self._has_symlink_component(file_path):
+                    logging.warning(f"Skipping encrypted file outside sync/encrypted folder or containing symlinks: {file_path}")
+                    return
+
                 logging.info(f"Sync folder file changed: {file_path.name}")
                 
                 # Get the decrypted file name (remove .gpg extension)
-                decrypted_name = file_path.name[:-4]
+                decrypted_name = file_path.name.rsplit('.gpg', 1)[0]
                 
                 # Create a temporary file for decryption
                 temp_encrypted = self.local_path / f".temp_{file_path.name}"
@@ -163,7 +213,13 @@ class SyncManager:
                 
                 # Decrypt the file
                 decrypted_path = self.decrypted_path / decrypted_name
+                os.makedirs(self.decrypted_path, exist_ok=True)
                 self.pgp_handler.decrypt_file(temp_encrypted, str(decrypted_path))
+                # Harden permissions on decrypted output (owner read/write only)
+                try:
+                    os.chmod(decrypted_path, 0o600)
+                except Exception as e:
+                    logging.warning(f"Failed to set secure permissions on {decrypted_path}: {e}")
                 
                 # Clean up temporary encrypted file
                 os.unlink(temp_encrypted)
