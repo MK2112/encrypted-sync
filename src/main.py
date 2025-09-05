@@ -5,35 +5,41 @@ import logging
 import argparse
 import signal
 
-from pgp_handler import PGPHandler
-from sync_folder_client import SyncFolderClient
-from file_monitor import FileMonitor
-from sync_manager import SyncManager
+try:
+    # Relative imports if running as package
+    from .pgp_handler import PGPHandler
+    from .sync_folder_client import SyncFolderClient
+    from .file_monitor import FileMonitor
+    from .sync_manager import SyncManager
+except ImportError:
+    # Absolute imports if running as script
+    from pgp_handler import PGPHandler
+    from sync_folder_client import SyncFolderClient
+    from file_monitor import FileMonitor
+    from sync_manager import SyncManager
 
 def load_config(config_path):
-    """Load configuration from JSON file."""
+    """Load configuration JSON data"""
     with open(config_path, 'r') as f:
         return json.load(f)
 
-def setup_logging():
-    """Set up logging configuration."""
+def setup_logging(log_file: str | None):
+    """log_file can be None, then disable file logging"""
+    handlers = [logging.StreamHandler()]
+    if log_file:
+        handlers.append(logging.FileHandler(log_file))
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(),
-            logging.FileHandler('encrypted-sync.log')
-        ]
+        handlers=handlers,
     )
 
 def check_android_permissions():
-    """Check if running on Android and request necessary permissions."""
+    """Running on Android requires requesting permissions"""
     try:
-        # Check if we're running on Android via Termux
+        # Check if running on Android through Termux
         if os.path.exists("/data/data/com.termux"):
-            logging.info("Running on Android via Termux")
-            
-            # Check if we have storage access
+            logging.info("Running on Android through Termux")
             if not os.access("/storage/emulated/0", os.R_OK | os.W_OK):
                 logging.warning("Storage access not available. Please run 'termux-setup-storage' first.")
                 print("Storage access not available. Please run 'termux-setup-storage' in Termux and restart the app.")
@@ -42,29 +48,28 @@ def check_android_permissions():
         logging.warning(f"Error checking Android permissions: {str(e)}")
 
 def main():
-    """Main application entry point."""
     parser = argparse.ArgumentParser(description='encrypted-sync: PGP Encryption Middleware for any cloud sync folder')
     parser.add_argument('--config', default='config.json', help='Path to configuration file')
     args = parser.parse_args()
-    
-    # Set up logging
-    setup_logging()
-    
     try:
         # Check Android permissions
         check_android_permissions()
-        
+
         # Load configuration
         config = load_config(args.config)
+
+        # Allow overriding or disabling file logging via config
+        log_file = config.get('log_file', None)
+        setup_logging(log_file)
         
-        # Initialize components
+        # Core components
         pgp_handler = PGPHandler(config)
         sync_folder_client = SyncFolderClient(config)
         
-        # Initialize sync manager
+        # Sync manager
         sync_manager = SyncManager(config, sync_folder_client, pgp_handler)
         
-        # Initialize file monitor
+        # File monitor
         file_monitor = FileMonitor(
             config['local']['monitored_path'],
             sync_manager.handle_local_change
