@@ -13,7 +13,6 @@ class PGPHandler:
     def __init__(self, config):
         # Initialize PGP handler with configuration
         self.config = config
-
         try:
             result = subprocess.run(['gpg', '--version'], capture_output=True, text=True)
             if result.returncode != 0:
@@ -22,10 +21,25 @@ class PGPHandler:
         except FileNotFoundError:
             raise EnvironmentError("GnuPG binary not found. Please install it and ensure it's on the PATH.")
 
-        self.gpg = gnupg.GPG(gnupghome=os.path.expanduser(config['pgp']['gnupghome']))
+        gnupg_home = os.path.expanduser(config['pgp']['gnupghome'])
+        # Ensure GnuPG home exists + has strict permissions
+        os.makedirs(gnupg_home, exist_ok=True)
+        try:
+            st = os.stat(gnupg_home)
+            # If group/other have any permissions, tighten to 0700
+            if (st.st_mode & 0o077) != 0:
+                try:
+                    os.chmod(gnupg_home, 0o700)
+                    logging.warning(f"Adjusted permissions on GnuPG home to 0700: {gnupg_home}")
+                except Exception as e:
+                    logging.warning(f"GnuPG home has permissive permissions and could not be fixed automatically: {gnupg_home} ({e})")
+        except FileNotFoundError:
+            pass # Already ensured exists
+
+        self.gpg = gnupg.GPG(gnupghome=gnupg_home)
         self.key_name = config['pgp']['key_name']
         self.passphrase = config['pgp'].get('passphrase')
-
+        self.always_trust = bool(config['pgp'].get('always_trust', False))
         self._verify_key()
 
     def _verify_key(self):
@@ -49,7 +63,7 @@ class PGPHandler:
                 status = self.gpg.encrypt_file(
                     f, recipients=[self.key_name],
                     output=output_path,
-                    always_trust=True
+                    always_trust=self.always_trust
                 )
         except Exception as e:
             raise RuntimeError(f"Encryption failed: I/O or GPG error: {str(e)}")
@@ -70,7 +84,7 @@ class PGPHandler:
         last_error = None
         for attempt in range(1, self.MAX_PASSPHRASE_RETRIES + 1):
             temp_fd, temp_path = tempfile.mkstemp()
-            os.close(temp_fd)  # We'll write to it with GPG
+            os.close(temp_fd)  # Write to it with GPG
 
             try:
                 passphrase = self.passphrase or getpass.getpass(
