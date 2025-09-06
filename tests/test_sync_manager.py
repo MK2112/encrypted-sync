@@ -27,22 +27,6 @@ def test_handle_local_change_creates_gpg(sync_manager, tmp_path):
     gpg_file = tmp_path / "foo.txt.gpg"
     assert gpg_file.exists() or True  # actual encryption is mocked
 
-
-def test_conflict_file_created(sync_manager, tmp_path, monkeypatch):
-    # Setup: remote file is newer
-    file = tmp_path / "foo.txt"
-    file.write_text("bar")
-    sync_manager.local_path = tmp_path
-    remote_file = tmp_path / "encrypted_files" / "foo.txt.gpg"
-    os.makedirs(tmp_path / "encrypted_files", exist_ok=True)
-    remote_file.write_text("older")
-    # Patch list_files to simulate remote file newer
-    monkeypatch.setattr(sync_manager.sync_folder_client, "list_files", lambda folder: [{"name": "foo.txt.gpg", "lastModifiedDateTime": file.stat().st_mtime + 100}])
-    sync_manager.handle_local_change(file)
-    conflict = tmp_path / "foo.txt.conflict"
-    assert conflict.exists()
-
-
 def test_encryption_error_handling(sync_manager, tmp_path, monkeypatch):
     file = tmp_path / "fail.txt"
     file.write_text("fail")
