@@ -1,12 +1,13 @@
-# encrypted-sync
+# guardian-sync
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![GPG](https://img.shields.io/badge/GPG-Encryption-brightgreen.svg)
 ![Cloud Sync](https://img.shields.io/badge/Cloud%20Sync-Supported-blueviolet.svg)
-![Build](https://github.com/MK2112/encrypted-sync/actions/workflows/test.yml/badge.svg)
+![Build](https://github.com/MK2112/guardian-sync/actions/workflows/test.yml/badge.svg)
 
-encrypted-sync is an encryption layer for cloud sync services. Files are automatically encrypted with PGP before they sync, and decrypted locally when needed. All encryption and decryption happens on your device, ensuring your data remains private and secure. encrypted-sync makes zero-trust cloud storage effortless for individuals and teams.
+guardian-sync provides a PGP encryption layer for zero-trust cloud storage. Files are automatically encrypted with PGP before they sync, and decrypted locally when needed.<br>
+All encryption and decryption happens on your device, ensuring your data remains private and secure.
 
 ## Features
 
@@ -26,8 +27,8 @@ encrypted-sync is an encryption layer for cloud sync services. Files are automat
 
 1. Clone the repository:
    ```
-   git clone https://github.com/MK2112/encrypted-sync.git
-   cd encrypted-sync
+   git clone https://github.com/MK2112/guardian-sync.git
+   cd guardian-sync
    ```
 
 2. Install the package:
@@ -66,12 +67,12 @@ encrypted-sync is an encryption layer for cloud sync services. Files are automat
    ```
    
    **Notes:**
-   - Use `sync_folder.path` to specify the full path to your cloud sync folder (e.g. for Dropbox, Google Drive, Syncthing, etc.)
+   - Use `sync_folder.path` to specify the full path to your cloud sync folder (e.g. for DropBox, Google Drive, SyncThing, etc.)
    - Set `pgp.key_name` to the name you used when creating your PGP key
    - Leave `pgp.passphrase` empty to be prompted each time, or set it for automatic operation (less secure)
    - Set `pgp.always_trust` to `true` only if you understand the risks; by default it is `false` for better security
    - Persisted logging is optional:
-     - Set `log_file` to a path (e.g. `"encrypted-sync.log"`) to enable file logging
+     - Set `log_file` to a path (e.g. `"guardian-sync.log"`) to enable file logging
      - Set `log_file` to `null` to disable file logging entirely (only console logs)
    - All files in the monitored directory, including hidden files, are encrypted and synced.
    - The tool automatically handles file overwrites and creates conflict files if both local and remote versions change independently.
@@ -88,25 +89,25 @@ encrypted-sync is an encryption layer for cloud sync services. Files are automat
    echo "my-secret-password" > secure_files/passwords.txt
    ```
 
-2. **Start encrypted-sync:**  
+2. **Start guardian-sync:**  
    Run the application to automatically encrypt new or changed files in your monitored directory:
 
    ```bash
-   encrypted-sync
+   guardian-sync
    ```
    You can specify a custom config file if needed:
    ```bash
-   encrypted-sync --config /path/to/your/config.json
+   guardian-sync --config /path/to/your/config.json
    ```
 
 3. **Encrypted files appear:**  
-   encrypted-sync will automatically:
+   guardian-sync will automatically:
    - Detect new or updated files in your monitored directory.
    - Encrypt them using your PGP key.
    - Place the encrypted versions (e.g. `passwords.txt.gpg`) in the configured encrypted folder (e.g. `encrypted_files/`).
 
 4. **Accessing your files elsewhere:**  
-   - To decrypt a file, encrypted-sync will automatically detect new encrypted files in your encrypted folder and decrypt them back to your monitored directory.
+   - To decrypt a file, guardian-sync will automatically detect new encrypted files in your encrypted folder and decrypt them back to your monitored directory.
    - You can safely sync the encrypted folder (`encrypted_files/`) with any cloud service (e.g. Dropbox, Google Drive, OneDrive, Syncthing, etc.), knowing only encrypted data leaves your device.
 
 ### Tests
@@ -119,10 +120,10 @@ pytest ./tests/
 ### Example Workflow
 
 - Add a file to `secure_files/`  
-  - encrypted-sync encrypts it to `encrypted_files/filename.gpg`.
+  - guardian-sync encrypts it to `encrypted_files/filename.gpg`.
 
 - Sync `encrypted_files/filename.gpg` to another device  
-  - encrypted-sync decrypts it back to `secure_files/filename`.
+  - guardian-sync decrypts it back to `secure_files/filename`.
 
 Your files are always encrypted before leaving your device. Only you, with your PGP key, can decrypt them.
 
