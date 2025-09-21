@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="encrypted-sync",
+    name="guardian-sync",
     version="0.0.1",
     packages=find_packages(),
     install_requires=[
@@ -13,12 +13,12 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "encrypted-sync=src.main:main",
+            "guardian-sync=src.main:main",
         ],
     },
     author="MK2112",
     author_email="mk2112@protonmail.com",
-    description="A middleman system for PGP encryption of cloud synced files",
-    keywords="sync, pgp, encryption, security, cloud, encrypted-sync",
+    description="A middleware for PGP encryption of cloud synced files",
+    keywords="sync, pgp, encryption, security, cloud, guardian-sync",
     python_requires=">=3.6",
 ) 

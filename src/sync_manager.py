@@ -166,7 +166,7 @@ class SyncManager:
                 if conflict_detected:
                     conflict_path = f"{file_path}.conflict"
                     shutil.copy2(file_path, conflict_path)
-                    logging.warning(f"encrypted-sync conflict detected for {rel_path}. Local copy saved as {conflict_path}")
+                    logging.warning(f"guardian-sync conflict detected for {rel_path}. Local copy saved as {conflict_path}")
                     # Return early: avoid encrypting/uploading on detected conflict
                     return
                 

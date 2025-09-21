@@ -48,7 +48,7 @@ def check_android_permissions():
         logging.warning(f"Error checking Android permissions: {str(e)}")
 
 def main():
-    parser = argparse.ArgumentParser(description='encrypted-sync: PGP Encryption Middleware for any cloud sync folder')
+    parser = argparse.ArgumentParser(description='guardian-sync: PGP Encryption Middleware for any cloud sync folder')
     parser.add_argument('--config', default='config.json', help='Path to configuration file')
     args = parser.parse_args()
     try:
@@ -89,7 +89,7 @@ def main():
         sync_manager.start()
         file_monitor.start()
         
-        logging.info("encrypted-sync: PGP Encryption Middleware started")
+        logging.info("guardian-sync: PGP Encryption Middleware started")
         
         # Keep the main thread alive
         while True:
