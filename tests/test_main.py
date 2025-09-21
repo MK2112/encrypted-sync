@@ -24,7 +24,7 @@ def test_main_entry(
     }
     MockLoadConfig.return_value = config
     sys_argv = sys.argv
-    sys.argv = ["encrypted-sync", "--config", "dummy.json"]
+    sys.argv = ["guardian-sync", "--config", "dummy.json"]
     with mock.patch("signal.pause", side_effect=SystemExit):
         import main
         try:
